@@ -18,6 +18,7 @@ vagrant/
 inventory/*
 !inventory/local
 !inventory/sample
+!inventory/vmcluster
 inventory/*/artifacts/
 
 # Byte-compiled / optimized / DLL files
