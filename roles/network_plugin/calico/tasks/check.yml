@@ -3,7 +3,7 @@
   assert:
     that:
       - "calico_pool_name is defined"
-      - "calico_pool_name | match('^[a-zA-Z0-9-_\\\\.]{2,63}$')"
+      - "calico_pool_name is match('^[a-zA-Z0-9-_\\\\.]{2,63}$')"
       - "ipip_mode is defined"
       - "ipip_mode in ['Always', 'CrossSubnet', 'Never']"
     msg: "Check variable definitions seems something is wrong"
@@ -14,13 +14,16 @@
   register: calico_version_on_server
   run_once: yes
   delegate_to: "{{ groups['kube-master'][0] }}"
+  async: 10
+  poll: 3
+  changed_when: false
 
 - name: "Determine if calico upgrade is needed"
   block:
-    - name: "Check that calico version is enought for upgrade"
+    - name: "Check that calico version is enough for upgrade"
       assert:
         that:
-          - calico_version_on_server.stdout|version_compare('v2.6.5', '>=')
+          - calico_version_on_server.stdout is version('v2.6.5', '>=')
         msg: "Your version of calico is not fresh enough for upgrade"
       when: calico_upgrade_enabled
 
@@ -28,8 +31,8 @@
       set_fact:
         calico_upgrade_needed: True
       when:
-        - calico_version_on_server.stdout|version_compare('v2.6.5', '>=')
-        - calico_version_on_server.stdout|version_compare('v3.0.0', '<')
+        - calico_version_on_server.stdout is version('v2.6.5', '>=')
+        - calico_version_on_server.stdout is version('v3.0.0', '<')
 
   when:
     - 'calico_version_on_server.stdout is defined'

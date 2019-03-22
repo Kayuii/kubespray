@@ -13,18 +13,20 @@ spec:
         app: netchecker-agent-hostnet
     spec:
       hostNetwork: True
-      # When having win nodes in cluster without this patch, this pod cloud try to be created in windows
       nodeSelector:
         beta.kubernetes.io/os: linux
-{% if kube_version | version_compare('v1.6', '>=') %}
+{% if kube_version is version('v1.6', '>=') %}
       dnsPolicy: ClusterFirstWithHostNet
+{% endif %}
+{% if kube_version is version('v1.11.1', '>=') %}
+      priorityClassName: {% if netcheck_namespace == 'kube-system' %}system-node-critical{% else %}k8s-cluster-critical{% endif %}{{''}}
 {% endif %}
       tolerations:
         - effect: NoSchedule
           operator: Exists
       containers:
         - name: netchecker-agent
-          image: "{{ agent_img }}"
+          image: "{{ netcheck_agent_image_repo }}:{{ netcheck_agent_image_tag }}"
           env:
             - name: MY_POD_NAME
               valueFrom:

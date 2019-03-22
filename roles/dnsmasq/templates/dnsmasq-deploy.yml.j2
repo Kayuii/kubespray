@@ -21,10 +21,12 @@ spec:
         kubernetes.io/cluster-service: "true"
         kubespray/dnsmasq-checksum: "{{ dnsmasq_stat.stat.checksum }}"
     spec:
+{% if kube_version is version('v1.11.1', '>=') %}
+      priorityClassName: system-cluster-critical
+{% endif %}
       tolerations:
         - effect: NoSchedule
           operator: Exists
-      # When having win nodes in cluster without this patch, this pod cloud try to be created in windows
       nodeSelector:
         beta.kubernetes.io/os: linux
       containers:

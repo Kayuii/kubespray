@@ -1,15 +1,15 @@
 ---
-
 - name: Local Volume Provisioner | Ensure base dir is created on all hosts
   file:
-    path: "{{ local_volume_provisioner_base_dir }}"
+    path: "{{ local_volume_provisioner_storage_classes[item.1].host_dir }}"
     state: directory
     owner: root
     group: root
     mode: 0700
-  delegate_to: "{{ item }}"
-  with_items: "{{ groups['k8s-cluster'] }}"
-  failed_when: false
+  delegate_to: "{{ item[0] }}"
+  with_nested:
+    - "{{ groups['k8s-cluster'] }}"
+    - "{{ local_volume_provisioner_storage_classes.keys() | list}}"
 
 - name: Local Volume Provisioner | Create addon dir
   file:
@@ -58,3 +58,5 @@
     state: "latest"
   with_items: "{{ local_volume_provisioner_manifests.results }}"
   when: inventory_hostname == groups['kube-master'][0]
+  loop_control:
+    label: "{{ item.item.file }}"

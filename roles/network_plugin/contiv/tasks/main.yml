@@ -86,13 +86,33 @@
   register: contiv_manifests_results
   when: inventory_hostname in groups['kube-master']
 
-- name: Contiv | Generate contiv-api-proxy certificates
-  script: generate-certificate.sh
-  args:
-    creates: /var/contiv/auth_proxy_key.pem
+- name: Contiv | Copy certs generation script
+  template:
+    src: "generate-certificate.sh.j2"
+    dest: "/var/contiv/generate-certificate.sh"
+    mode: 0700
   when:
     - contiv_enable_api_proxy
     - contiv_generate_certificate
+  delegate_to: "{{ groups['kube-master'][0] }}"
+  run_once: true
+
+- name: Contiv | Check for cert key existence
+  stat:
+    path: /var/contiv/auth_proxy_key.pem
+  register: contiv_certificate_key_state
+  when:
+    - contiv_enable_api_proxy
+    - contiv_generate_certificate
+  delegate_to: "{{ groups['kube-master'][0] }}"
+  run_once: true
+
+- name: Contiv | Generate contiv-api-proxy certificates
+  command: /var/contiv/generate-certificate.sh
+  when:
+    - contiv_enable_api_proxy
+    - contiv_generate_certificate
+    - (not contiv_certificate_key_state.stat.exists)
   delegate_to: "{{ groups['kube-master'][0] }}"
   run_once: true
 
@@ -123,14 +143,20 @@
     - contiv_enable_api_proxy
     - contiv_generate_certificate
 
-- name: Contiv | Copy cni plugins from hyperkube
-  command: "{{ docker_bin_dir }}/docker run --rm -v /opt/cni/bin:/cnibindir {{ hyperkube_image_repo }}:{{ hyperkube_image_tag }} /bin/bash -c '/bin/cp -fa /opt/cni/bin/* /cnibindir/'"
-  register: cni_task_result
-  until: cni_task_result.rc == 0
-  retries: 4
-  delay: "{{ retry_stagger | random + 3 }}"
-  changed_when: false
-  tags: [hyperkube, upgrade]
+- name: Contiv | Set cni directory permissions
+  file:
+    path: /opt/cni/bin
+    state: directory
+    owner: kube
+    recurse: true
+    mode: 0755
+
+- name: Contiv | Copy cni plugins
+  unarchive:
+    src: "{{ local_release_dir }}/cni-plugins-{{ image_arch }}-{{ cni_version }}.tgz"
+    dest: "/opt/cni/bin"
+    mode: 0755
+    remote_src: yes
 
 - name: Contiv | Copy netctl binary from docker container
   command: sh -c "{{ docker_bin_dir }}/docker rm -f netctl-binarycopy;

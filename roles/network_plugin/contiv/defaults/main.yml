@@ -4,7 +4,7 @@ contiv_config_dir: "{{ kube_config_dir }}/contiv"
 contiv_etcd_conf_dir: "/etc/contiv/etcd"
 contiv_etcd_data_dir: "/var/lib/etcd/contiv-data"
 contiv_netmaster_port: 9999
-contiv_cni_version: 0.1.0
+contiv_cni_version: 0.3.1
 
 # No need to download it by default, but must be defined
 contiv_etcd_image_repo: "{{ etcd_image_repo }}"
@@ -14,7 +14,7 @@ contiv_etcd_listen_port: 6666
 contiv_etcd_peer_port: 6667
 contiv_etcd_endpoints: |-
   {% for host in groups['kube-master'] -%}
-    contiv_etcd{{ loop.index }}=http://{{ hostvars[host]['ip'] | default(hostvars[host].ansible_default_ipv4['address']) }}:{{ contiv_etcd_peer_port }}{% if not loop.last %},{% endif %}
+    contiv_etcd{{ loop.index }}=http://{{ hostvars[host]['ip'] | default(fallback_ips[host]) }}:{{ contiv_etcd_peer_port }}{% if not loop.last %},{% endif %}
   {%- endfor %}
 
 # Parameters for Contiv api-proxy
@@ -28,7 +28,7 @@ contiv_fwd_mode: routing
 # Fabric mode: aci, aci-opflex or default
 contiv_fabric_mode: default
 
-# Defaut netmode: vxlan or vlan
+# Default netmode: vxlan or vlan
 contiv_net_mode: vxlan
 
 # Dataplane interface

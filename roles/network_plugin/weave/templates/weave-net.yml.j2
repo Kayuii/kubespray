@@ -115,6 +115,9 @@ items:
           labels:
             name: weave-net
         spec:
+{% if kube_version is version('v1.11.1', '>=') %}
+          priorityClassName: system-node-critical
+{% endif %}
           containers:
             - name: weave
               command:
@@ -135,7 +138,7 @@ items:
                 - name: CONN_LIMIT
                   value: "{{ weave_conn_limit | int }}"
                 - name: HAIRPIN_MODE
-                  value: "{{ weave_hairpin_mode | bool }}"
+                  value: "{{ weave_hairpin_mode | bool | lower }}"
                 - name: IPALLOC_RANGE
                   value: "{{ weave_ipalloc_range }}"
                 - name: EXPECT_NPC
@@ -170,12 +173,11 @@ items:
 {% endif %}
               image: {{ weave_kube_image_repo }}:{{ weave_kube_image_tag }}
               imagePullPolicy: {{ k8s_image_pull_policy }}
-              livenessProbe:
+              readinessProbe:
                 httpGet:
                   host: 127.0.0.1
                   path: /status
                   port: 6784
-                initialDelaySeconds: 30
               resources:
                 requests:
                   cpu: 10m
@@ -197,7 +199,6 @@ items:
                 - name: xtables-lock
                   mountPath: /run/xtables.lock
             - name: weave-npc
-              args: []
               env:
                 - name: HOSTNAME
                   valueFrom:
@@ -223,6 +224,9 @@ items:
           tolerations:
             - effect: NoSchedule
               operator: Exists
+            # Mark pod as critical for rescheduling (Will have no effect starting with kubernetes 1.12)
+            - key: CriticalAddonsOnly
+              operator: "Exists"
           volumes:
             - name: weavedb
               hostPath:

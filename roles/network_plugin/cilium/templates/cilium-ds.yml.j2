@@ -21,23 +21,18 @@ spec:
       labels:
         k8s-app: cilium
         kubernetes.io/cluster-service: "true"
-      annotations:
-        # This annotation plus the CriticalAddonsOnly toleration makes
-        # cilium to be a critical pod in the cluster, which ensures cilium
-        # gets priority scheduling.
-        # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        scheduler.alpha.kubernetes.io/tolerations: >-
-          [{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]
 {% if cilium_enable_prometheus %}
         prometheus.io/scrape: "true"
         prometheus.io/port: "9090"
 {% endif %}
     spec:
+{% if kube_version is version('v1.11.1', '>=') %}
+      priorityClassName: system-node-critical
+{% endif %}
       serviceAccountName: cilium
       initContainers:
         - name: clean-cilium-state
-          image: docker.io/library/busybox:1.28.4
+          image: {{ cilium_init_image_repo }}:{{ cilium_init_image_tag }}
           imagePullPolicy: IfNotPresent
           command: ['sh', '-c', 'if [ "${CLEAN_CILIUM_STATE}" = "true" ]; then rm -rf /var/run/cilium/state; rm -rf /sys/fs/bpf/tc/globals/cilium_*; fi']
           volumeMounts:
@@ -222,11 +217,7 @@ spec:
 
       restartPolicy: Always
       tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/master
-        - effect: NoSchedule
-          key: node.cloudprovider.kubernetes.io/uninitialized
-          value: "true"
-        # Mark cilium's pod as critical for rescheduling
+        - operator: Exists
+        # Mark pod as critical for rescheduling (Will have no effect starting with kubernetes 1.12)
         - key: CriticalAddonsOnly
           operator: "Exists"
