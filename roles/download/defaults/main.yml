@@ -57,10 +57,16 @@ contiv_version: 1.2.1
 cilium_version: "v1.2.0"
 
 # Download URLs
-kubeadm_download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ kubeadm_version }}/bin/linux/{{ image_arch }}/kubeadm"
-vault_download_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_{{ image_arch }}.zip"
-etcd_download_url: "https://github.com/coreos/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
-hyperkube_download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ kube_version }}/bin/linux/amd64/hyperkube"
+# kubeadm_download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ kubeadm_version }}/bin/linux/{{ image_arch }}/kubeadm"
+# vault_download_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_{{ image_arch }}.zip"
+# etcd_download_url: "https://github.com/coreos/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
+# hyperkube_download_url: "https://storage.googleapis.com/kubernetes-release/release/{{ kube_version }}/bin/linux/amd64/hyperkube"
+kubeadm_download_url: "http://192.168.1.123:81/kubernetes-release/release/{{ kubeadm_version }}/bin/linux/{{ image_arch }}/kubeadm"
+vault_download_url: "http://192.168.1.123:81/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_{{ image_arch }}.zip"
+etcd_download_url: "http://192.168.1.123:81/coreos/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
+hyperkube_download_url: "http://192.168.1.123:81/kubernetes-release/release/{{ kube_version }}/bin/linux/amd64/hyperkube"
+
+
 
 # Checksums
 hyperkube_checksums:
