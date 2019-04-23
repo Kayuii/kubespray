@@ -54,7 +54,7 @@ https_proxy: "http://192.168.1.101:8118"
 
 ## Refer to roles/kubespray-defaults/defaults/main.yml before modifying no_proxy
 #no_proxy: ""
-no_proxy: "localhost,127.0.0.1,192.168.1.101,192.168.0.0,192.168.0.0/12"
+no_proxy: "localhost,127.0.0.1,192.168.1.101,192.168.1.29,192.168.0.0,192.168.0.0/12"
 
 
 ## Some problems may occur when downloading files over https proxy due to ansible bug
